@@ -8,7 +8,7 @@
 * **Backend**: Node.js API (internal)
 * **Cache**: Redis (internal)
 * **Traffic Flow**
-  `Internet → Frontend (NGINX) → Backend (Node.js) → Redis`
+`Internet → Frontend (NGINX) → Backend (Node.js) → Redis`
 
 ---
 
