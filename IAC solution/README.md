@@ -57,15 +57,6 @@ You can access the application using the ALB DNS name.
       NAT gateways are provisioned for private subnet outbound internet access.
       ALB handles HTTP traffic on port 80; HTTPS can be added as needed.
 
-### Time Spent ####
-
-   Planning & Architecture: 20mins
-   Terraform Coding (main.tf, variables.tf, outputs.tf, provider.tf): 1 hours
-   Testing & Debugging: 20mins
-   README & Documentation: 20mins
-   Total: ~ 2 hours
-
-
 
 # Exercise 1: Infrastructure as Code (IaC)
 
@@ -91,7 +82,9 @@ You can access the application using the ALB DNS name.
 
 
 # DIRECTORY STRUCTURE
+---
 
+```
 iac-project/
 ├── main.tf                  # All AWS resources: VPC, subnets, security groups, ALB, ASG, EC2, RDS, S3
 ├── variables.tf             # All variables for environment, instance types, DB credentials, etc.
@@ -100,15 +93,24 @@ iac-project/
 ├── README.md                # Instructions to deploy and architecture explanation
 └── scripts/
     └── user_data.sh         # Optional: EC2 user_data script for bootstrapping servers
+```
 
-Notes
+### **Notes**
 
-main.tf: Contains all resources in one file.
+1. **main.tf**: Contains **all resources in one file**.
+2. **variables.tf**: Centralizes all input variables for flexibility.
+3. **outputs.tf**: Centralizes outputs that you can reference after deployment.
+4. **provider.tf**: Configures AWS provider region.
+5. **scripts/user_data.sh**: Optional file for EC2 initialization (e.g., install Apache/Nginx, deploy app).
 
-variables.tf: Centralizes all input variables for flexibility.
+---
 
-outputs.tf: Centralizes outputs that you can reference after deployment.
+## Time Spent
 
-provider.tf: Configures AWS provider region.
+* Planning & Architecture: 20mins
+* Terraform Coding (main.tf, variables.tf, outputs.tf, provider.tf): 1 hours
+* Testing & Debugging: 20mins
+* README & Documentation: 20mins
+* Total: ~ 2 hours
 
-scripts/user_data.sh: Optional file for EC2 initialization
+---

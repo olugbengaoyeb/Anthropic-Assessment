@@ -1,90 +1,146 @@
-1. Pipeline Stages
+---
 
-Checkout & Build
+# 🧱 Multi-Tier Application on Kubernetes
 
-Checkout code from repository
+## Architecture Overview
 
-Install dependencies
+* **Frontend**: NGINX (public-facing)
+* **Backend**: Node.js API (internal)
+* **Cache**: Redis (internal)
+* **Traffic Flow**
+  `Internet → Frontend (NGINX) → Backend (Node.js) → Redis`
 
-Run unit tests
+---
 
-Static Analysis & Security Scan
+## 📁 Directory Structure
 
-Linting with flake8 or pylint
+```
+k8s-manifests/
+├── frontend.yaml
+├── backend.yaml
+├── redis.yaml
+├── configmap.yaml
+├── secrets.yaml
+├── hpa.yaml
+├── network-policy.yaml
+└── README.md
+```
 
-Dependency vulnerability scan (e.g., safety for Python)
+---
 
-Docker image vulnerability scan (e.g., trivy)
+## 🚀 Deployment Instructions (Minikube)
 
-Docker Build & Push
+```bash
+minikube start
+kubectl apply -f .
+minikube service frontend
+```
 
-Build Docker image for the application
+---
 
-Tag image with branch, commit SHA, or version
+* Pipeline stages
+* GitHub Actions workflow (`.github/workflows/ci-cd.yaml`)
+* Documentation explaining the flow, rollback strategy, and secret management
 
-Push image to container registry (e.g., Docker Hub, AWS ECR, GCR)
+---
 
-Deployment to Staging
+## **1. Pipeline Stages**
 
-Apply Kubernetes manifests (kubectl apply)
+1. **Checkout & Build**
 
-Run integration tests in staging
+   * Checkout code from repository
+   * Install dependencies
+   * Run unit tests
 
-Health checks and readiness checks
+2. **Static Analysis & Security Scan**
 
-Approval Gate for Production
+   * Linting with `flake8` or `pylint`
+   * Dependency vulnerability scan (e.g., `safety` for Python)
+   * Docker image vulnerability scan (e.g., `trivy`)
 
-Require manual approval before deploying to production
+3. **Docker Build & Push**
 
-Deployment to Production
+   * Build Docker image for the application
+   * Tag image with branch, commit SHA, or version
+   * Push image to container registry (e.g., Docker Hub, AWS ECR, GCR)
 
-Apply production manifests
+4. **Deployment to Staging**
 
-Rollout strategy (e.g., Kubernetes rolling update)
+   * Apply Kubernetes manifests (`kubectl apply`)
+   * Run integration tests in staging
+   * Health checks and readiness checks
 
-Optional rollback if health checks fail
+5. **Approval Gate for Production**
+
+   * Require manual approval before deploying to production
+
+6. **Deployment to Production**
+
+   * Apply production manifests
+   * Rollout strategy (e.g., Kubernetes rolling update)
+   * Optional rollback if health checks fail
 
 
+---
+
+## **3. Pipeline Flow & Decision Points**
+
+1. **PRs / Feature Branches**
+
+   * Developers push changes to `feature/*` branches
+   * Workflow runs **build, test, lint, and security scan**
+   * Only after passing these checks can PR be merged into `develop`
+
+2. **Develop Branch**
+
+   * Trigger build, test, and docker build
+   * Deploy automatically to **staging** for integration testing
+
+3. **Production Deployment**
+
+   * Requires **manual approval gate**
+   * Deploys latest image from staging to production
+   * **Rollback strategy:** Kubernetes **rolling update** allows rollback if health checks fail
+   * Can trigger `kubectl rollout undo deployment/my-app -n production` if needed
+
+---
+
+## **4. Secret Management**
+
+* All credentials are stored as **GitHub Actions Secrets**:
+
+  * `DOCKER_USERNAME` / `DOCKER_PASSWORD` → Docker registry
+  * `KUBECONFIG_STAGING` / `KUBECONFIG_PROD` → Kubernetes cluster access
+* Secrets are never hardcoded in workflow files
+* Access is limited to the jobs that need them
+
+---
 
 
+## 🔁 Scaling & Self-Healing Explained
 
+### Scaling
 
+* **HPA** scales backend pods automatically based on CPU usage
+* Frontend can be manually scaled or HPA added later
+* Redis runs single-replica by design (stateful)
 
+### Self-Healing
 
-Pipeline Flow & Decision Points
+* **Liveness probes** restart unhealthy containers
+* **Readiness probes** remove unhealthy pods from traffic
+* **ReplicaSets** ensure desired pod count is always maintained
 
-PRs / Feature Branches
+---
 
-Developers push changes to feature/* branches
+## 📊 Observability Readiness
 
-Workflow runs build, test, lint, and security scan
+* Metrics available via `metrics-server` (HPA-ready)
+* Logs accessible via `kubectl logs`
+* Easily extensible to:
 
-Only after passing these checks can PR be merged into develop
+  * Prometheus + Grafana
+  * EFK / Loki
+  * OpenTelemetry tracing
 
-Develop Branch
-
-Trigger build, test, and docker build
-
-Deploy automatically to staging for integration testing
-
-Production Deployment
-
-Requires manual approval gate
-
-Deploys latest image from staging to production
-
-Rollback strategy: Kubernetes rolling update allows rollback if health checks fail
-
-Can trigger kubectl rollout undo deployment/my-app -n production if needed
-
-4. Secret Management
-
-All credentials are stored as GitHub Actions Secrets:
-
-DOCKER_USERNAME / DOCKER_PASSWORD → Docker registry
-
-KUBECONFIG_STAGING / KUBECONFIG_PROD → Kubernetes cluster access
-
-Secrets are never hardcoded in workflow files
-
-Access is limited to the jobs that need them
+---
