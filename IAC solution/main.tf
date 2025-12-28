@@ -54,7 +54,6 @@ resource "aws_internet_gateway" "igw" {
 # NAT Gateways
 resource "aws_eip" "nat" {
   count = 2
-  vpc   = true
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -182,13 +181,19 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 # S3 Bucket
 resource "aws_s3_bucket" "static_assets" {
   bucket = "${var.env}-static-assets"
-  acl    = "private"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
+resource "aws_s3_bucket_acl" "static_assets_acl" {
+  bucket = aws_s3_bucket.static_assets.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "static_assets" {
+  bucket = aws_s3_bucket.static_assets.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
@@ -205,7 +210,6 @@ resource "aws_db_instance" "rds" {
   engine_version         = "8.0"
   instance_class         = "db.t3.medium"
   allocated_storage      = 20
-  name                   = var.db_name
   username               = var.db_username
   password               = var.db_password
   db_subnet_group_name   = aws_db_subnet_group.rds_subnets.name
